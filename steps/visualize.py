@@ -3,9 +3,9 @@
 
 #old version, need updated
 from data_loader import myDataset
-from data_loader import myDataLoader, myCNNDataLoader
+from utils.data_loader import myDataLoader, myCNNDataLoader
 from model import *
-from ctcDecoder import GreedyDecoder, BeamDecoder
+from utils.ctcDecoder import GreedyDecoder, BeamDecoder
 import torch
 import torch.nn as nn
 from torch.autograd import Variable

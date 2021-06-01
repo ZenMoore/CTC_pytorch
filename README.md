@@ -43,7 +43,7 @@ Chinese Corpus: 863 Corpus
     ~~Notice: If use python2, reinstall the pytorch with source code instead of pip.~~
     Use pytorch1.2 built-in CTC function(nn.CTCLoss) Now.
 - Install [Kaldi](https://github.com/kaldi-asr/kaldi). We use kaldi to extract mfcc and fbank.
-- Install pytorch [torchaudio](https://github.com/pytorch/audio.git)(This is needed when using waveform as input).
+- Install pytorch [torchaudio](https://github.com/pytorch/audio.git) (This is needed when using waveform as input).
 - ~~Install [KenLM](https://github.com/kpu/kenlm). Training n-gram Languange Model if needed~~.
     Use Irstlm in kaldi tools instead.
 - Install and start visdom

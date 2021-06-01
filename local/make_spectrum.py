@@ -15,14 +15,14 @@ class KaldiWriteOut(object):
     def __init__(self, ark_path, scp_path):
         self.ark_path = ark_path
         self.scp_path = scp_path
-	self.ark_file_write = open(ark_path, 'wb')
+        self.ark_file_write = open(ark_path, 'wb')
         self.scp_file_write = open(scp_path, 'w')
         self.pos = 0
 
     def write_kaldi_mat(self, utt_id, utt_mat):
         utt_mat = np.asarray(utt_mat, dtype=np.float32)
         rows, cols = utt_mat.shape
-        self.ark_file_write.write(struct.pack('<%ds'%(len(utt_id)), utt_id))
+        self.ark_file_wxrite.write(struct.pack('<%ds'%(len(utt_id)), utt_id))
         self.ark_file_write.write(struct.pack('<cxcccc', ' ', 'B', 'F', 'M', ' '))
         self.ark_file_write.write(struct.pack('<bi', 4, rows))
         self.ark_file_write.write(struct.pack('<bi', 4, cols))
@@ -42,7 +42,7 @@ def load_audio(path):
     Output:
         sound    : numpy.ndarray 单声道音频数据，如果是多声道进行平均
     '''
-    sound, _ = torchaudio.load(path)
+    sound, _ = torchaudio.load(path)  # waveform and sample rate
     sound = sound.numpy()
     if len(sound.shape) > 1:
         if sound.shape[1] == 1:

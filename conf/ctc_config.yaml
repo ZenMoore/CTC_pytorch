@@ -36,7 +36,7 @@ kernel_size: "[(3, 3), (3, 3)]"
 stride: "[(1, 2), (2, 2)]"
 padding: "[(1, 1), (1, 1)]"
 pooling: "None"
-batch_norm: True
+#batch_norm: True
 activation_function: "relu"
 
 #[Training]

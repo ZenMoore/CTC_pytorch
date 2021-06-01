@@ -20,6 +20,7 @@ class BatchRNN(nn.Module):
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.bidirectional = bidirectional
+        # note: batch_norm is always before the activation to put the input into the sensitive region
         self.batch_norm = nn.BatchNorm1d(input_size) if batch_norm else None
         self.rnn = rnn_type(input_size=input_size, hidden_size=hidden_size,
                                 bidirectional=bidirectional, bias=False)
@@ -112,8 +113,8 @@ class CTC_Model(nn.Module):
                 except:
                     #if using 1-d Conv
                     rnn_input_size = rnn_input_size
-            self.conv = nn.Sequential(OrderedDict(cnns))
-            rnn_input_size *= out_channel
+            self.conv = nn.Sequential(OrderedDict(cnns))  # note
+            rnn_input_size *= out_channel  # note: may be concatenation along the out_channel
         else:
             rnn_input_size = rnn_param["rnn_input_size"]
         
@@ -126,6 +127,7 @@ class CTC_Model(nn.Module):
         rnn = BatchRNN(input_size=rnn_input_size, hidden_size=rnn_hidden_size, rnn_type=rnn_type, 
                             bidirectional=bidirectional, dropout=drop_out, batch_norm=False)
         rnns.append(('0', rnn))
+        # note: see https://blog.csdn.net/foneone/article/details/104002372 to learn about the input_size issue
         for i in range(rnn_layers-1):
             rnn = BatchRNN(input_size=self.num_directions*rnn_hidden_size, hidden_size=rnn_hidden_size, rnn_type=rnn_type, 
                                 bidirectional=bidirectional, dropout=drop_out, batch_norm=batch_norm)
@@ -133,11 +135,12 @@ class CTC_Model(nn.Module):
         self.rnns = nn.Sequential(OrderedDict(rnns))
 
         if batch_norm:
+            # note: batch normalization can also be added before linear layer to reduce internal covariante shift
             self.fc = nn.Sequential(nn.BatchNorm1d(self.num_directions*rnn_hidden_size),
                                 nn.Linear(self.num_directions*rnn_hidden_size, num_class, bias=False),)
         else:
             self.fc = nn.Linear(self.num_directions*rnn_hidden_size, num_class, bias=False)
-        self.log_softmax = nn.LogSoftmax(dim=-1)
+        self.log_softmax = nn.LogSoftmax(dim=-1)  # note: see https://www.zhihu.com/question/358069078 to learn about log_softmax
     
     def forward(self, x, visualize=False):
         #x: batch_size * 1 * max_seq_length * feat_size
@@ -178,13 +181,15 @@ class CTC_Model(nn.Module):
             x = x.view(seq_len*batch, -1)
             x = self.fc(x)
             x = x.view(seq_len, batch, -1)
+            # note: the dim of batch is delicate, see https://www.jianshu.com/p/41c15d301542 for more info.
+            # note: or you can use batch_first for pytorch
             out = self.log_softmax(x)
             if visualize:
                 visual.append(out)
                 return out, visual
             return out
 
-    def compute_wer(self, index, input_sizes, targets, target_sizes):
+    def compute_wer(self, index, input_sizes, targets, target_sizes): # issue: what is this?
         batch_errs = 0
         batch_tokens = 0
         for i in range(len(index)):
@@ -201,12 +206,14 @@ class CTC_Model(nn.Module):
             batch_tokens += len(label)
         return batch_errs, batch_tokens
 
-    def add_weights_noise(self):
+
+    def add_weights_noise(self): # note: gaussian noise for net_params
         for param in self.parameters():
             weight_noise = param.data.new(param.size()).normal_(0, 0.075).type_as(param.type())
             param = torch.nn.parameter.Parameter(param.data + weight_noise)
 
-    @staticmethod
+
+    @staticmethod # note: to save the net_params&network, torch.save(dict) and package is a dict
     def save_package(model, optimizer=None, decoder=None, epoch=None, loss_results=None, dev_loss_results=None, dev_cer_results=None):
         package = {
                 'rnn_param': model.rnn_param,
@@ -230,7 +237,8 @@ class CTC_Model(nn.Module):
 
 if __name__ == '__main__':
     model = CTC_Model(add_cnn=True, cnn_param={"batch_norm":True, "activativate_function":nn.ReLU, "layer":[[(1,32), (3,41), (1,2), (0,0), None],
-                            [(32,32), (3,21), (2,2), (0,0), None]]}, num_class=48, drop_out=0)
+                            [(32,32), (3,21), (2,2), (0,0), None]]}, num_class=48, drop_out=0)  # note: cnn_param['layer']
     for idx, m in CTC_Model.modules():
-        print(idx, m) 
-    
+        print(idx, m)
+
+        # todo: what is this model serving for? i.e. then how we use the output to do another thing and to do what?

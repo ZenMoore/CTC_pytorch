@@ -246,6 +246,7 @@ def main(conf):
     best_path = os.path.join(save_dir, 'ctc_best_model.pkl')
     params['epoch']=count
 
+    # note: to save more information, we can define this type of save_package function in Model Class as static method
     torch.save(CTC_Model.save_package(model, optimizer=optimizer, epoch=params, loss_results=loss_results, dev_loss_results=dev_loss_results, dev_cer_results=dev_cer_results), best_path)
 
 if __name__ == '__main__':

@@ -7,7 +7,7 @@ import math
 import torch
 import numpy as np
 #import librosa
-#import torchaudio
+import torchaudio
 
 def load_audio(path):
     """
